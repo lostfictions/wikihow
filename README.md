@@ -1,23 +1,23 @@
 a nice bot 4 u.
 
-dockerized. will ~~~tweet and~~~ toot very good cats regularly.
+dockerized. will regularly ~~~tweet and~~~ toot advice on how to do things.
 
-_(twitter support probably won't be added )_
+_(twitter support probably won't be added due to twitter's changes in process
+for acquiring developer/api access.)_
 
 
 - `MASTODON_TOKEN`: a Mastodon user API token
 - `MASTODON_SERVER`: the instance to which API calls should be made (usually
   where the bot user lives.) (default: https://mastodon.social)
-~~~- `TWITTER_CONSUMER_KEY`, `TWITTER_CONSUMER_SECRET`, `TWITTER_ACCESS_KEY`, and
-  `TWITTER_ACCESS_SECRET`: you need all of these guys to make a tweet.~~~
-- `INTERVAL_MINUTES`: the interval between each post. (default: 240 minutes)
+- `CRON_RULE`: a crontab-format string defining the frequency or intervals at
+  which the bot should post. (default: every four hours)
 
-catbot uses the [envalid](https://github.com/af/envalid) package which in turn
-wraps [dotenv](https://github.com/motdotla/dotenv), so you can alternately stick
-any of the above environment variables in a file named `.env` in the project
-root. (it's gitignored, so there's no risk of accidentally committing private
-API tokens you put in there.)
+the wikihow bot uses the [envalid](https://github.com/af/envalid) package which
+in turn wraps [dotenv](https://github.com/motdotla/dotenv), so you can
+alternately stick any of the above environment variables in a file named `.env`
+in the project root. (it's gitignored, so there's no risk of accidentally
+committing private API tokens you put in there.)
 
-catbot is written in typescript, and the dockerfile will compile to js as part
-of its setup. run `yarn watch` if you're hacking on things and want to
-automatically recompile on changes.
+this bot is written in typescript, and the dockerfile will compile to js as part
+of its setup. run `yarn dev` if you're hacking on things and want to re-run
+local generation in the console on updates.
