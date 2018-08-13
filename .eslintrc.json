@@ -1,0 +1,30 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "node": true
+  },
+  "parser": "typescript-eslint-parser",
+  "plugins": ["typescript"],
+  "extends": ["eslint:recommended", "prettier"],
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "sourceType": "module"
+  },
+  "rules": {
+    "curly": [
+      "warn",
+      "multi-line",
+      "consistent"
+    ],
+    "no-console": "off",
+    "no-empty": "warn",
+    "no-undef": "off",
+    "no-unused-expressions": "error",
+    "no-unused-vars": "off",
+    "prefer-const": "warn",
+    "no-shadow": "warn"
+  }
+}
