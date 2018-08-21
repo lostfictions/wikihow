@@ -2,11 +2,11 @@ require("source-map-support").install();
 
 import { join, extname } from "path";
 import { tmpdir } from "os";
-import { promises as fs } from "fs";
+import { createWriteStream } from "fs";
 
 import { scheduleJob } from "node-schedule";
 import { twoot } from "twoot";
-import * as got from "got";
+import axios from "axios";
 import * as cheerio from "cheerio";
 
 import { randomInArray } from "./util";
@@ -19,40 +19,78 @@ const twootConfigs = [
   }
 ];
 
-function getWikihowImage() {
-  return got("https://www.wikihow.com/Special:Randomizer").then(res => {
-    const $ = cheerio.load(res.body);
+async function getWikihow() {
+  let retries = 10;
+  let title!: string;
+  let imgs!: string[];
+  async function requestAndParse() {
+    const res = await axios.get("https://www.wikihow.com/Special:Randomizer");
 
-    const title = $("h1.firstHeading a").text();
+    const $ = cheerio.load(res.data);
 
-    const imgs = $("img.whcdn")
+    const headerList = $("h1");
+    if (headerList.length > 1) {
+      console.warn(
+        `List of <h1> tags has more than one item! Title format might have changed.`
+      );
+    }
+
+    title = headerList.first().text();
+
+    imgs = $("img.whcdn")
       .toArray()
       .map(img => img.attribs["data-src"])
       .filter(url => url); // only images with this attribute!
+  }
+  await requestAndParse();
 
-    return {
-      title,
-      image: randomInArray(imgs)
-    };
-  });
+  while ((!title || imgs.length === 0) && retries > 0) {
+    console.log(
+      `Can't retrieve valid random wikihow page, retrying... (${retries} tries remaining)`
+    );
+    retries--;
+    await requestAndParse();
+  }
+
+  if (!title || imgs.length === 0) {
+    throw new Error(
+      `Unable to retrieve or parse a valid Wikihow page! Last result:\nTitle: "${title}"\nImages: [${imgs
+        .map(i => `"${i}"`)
+        .join(", ")}]`
+    );
+  }
+
+  return {
+    title,
+    image: randomInArray(imgs)
+  };
 }
 
 const tmp = tmpdir();
 let fnCount = 0;
-async function saveLocally(url: string): Promise<string> {
-  const img = await got(url, { encoding: null });
+async function saveImage(url: string): Promise<string> {
+  const resp = await axios.get(url, { responseType: "stream" });
 
   const filename = join(tmp, `wikibot_${fnCount++}${extname(url)}`);
-  await fs.writeFile(filename, img.body);
+  const ws = createWriteStream(filename);
+  resp.data.pipe(ws);
 
-  return filename;
+  return new Promise<string>((res, rej) => {
+    ws.on("finish", () => res(filename));
+    ws.on("error", rej);
+  });
+}
+
+async function makeStatus() {
+  const { title } = await getWikihow();
+  const { image } = await getWikihow();
+  const filename = await saveImage(image);
+  return { title, filename };
 }
 
 async function doTwoot(): Promise<void> {
   try {
-    const { title, image } = await getWikihowImage();
-
-    const filename = await saveLocally(image);
+    const { title, filename } = await makeStatus();
 
     const urls = await twoot(twootConfigs, title, [filename]);
     console.log(
@@ -67,9 +105,8 @@ async function doTwoot(): Promise<void> {
 
 if (process.argv.slice(2).includes("local")) {
   const localJob = () =>
-    getWikihowImage().then(async ({ title, image }) => {
-      console.log(title);
-      console.log(image);
+    makeStatus().then(({ title, filename }) => {
+      console.log(`${title}: file://${filename}`);
       setTimeout(localJob, 5000);
     });
 
