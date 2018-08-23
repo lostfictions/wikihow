@@ -1,6 +1,6 @@
 require("source-map-support").install();
 
-import { join, extname } from "path";
+import { join } from "path";
 import { tmpdir } from "os";
 import { createWriteStream } from "fs";
 
@@ -8,6 +8,7 @@ import { scheduleJob } from "node-schedule";
 import { twoot } from "twoot";
 import axios from "axios";
 import * as cheerio from "cheerio";
+import { createCanvas, Image } from "canvas";
 
 import { randomInArray } from "./util";
 import { MASTODON_SERVER, MASTODON_TOKEN, CRON_RULE } from "./env";
@@ -67,18 +68,39 @@ async function getWikihow() {
 }
 
 const tmp = tmpdir();
-let fnCount = 0;
+let tmpFileCounter = 0;
 async function saveImage(url: string): Promise<string> {
-  const resp = await axios.get(url, { responseType: "stream" });
+  const resp = await axios.get(url, {
+    responseType: "arraybuffer"
+  });
 
-  const filename = join(tmp, `wikibot_${fnCount++}${extname(url)}`);
+  const image = new Image();
+  const imageLoad = new Promise((res, rej) => {
+    image.onload = res;
+    image.onerror = rej;
+  });
+  image.src = resp.data;
+  await imageLoad;
+
+  // crop the image. 93% height is a rough estimate for getting rid of the
+  // watermark.
+  const canvas = createCanvas(image.width, image.height * 0.93);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(image, 0, 0);
+
+  const rs = canvas.createPNGStream();
+
+  const filename = join(tmp, `wikibot_${tmpFileCounter++}.png`);
+
   const ws = createWriteStream(filename);
-  resp.data.pipe(ws);
+  rs.pipe(ws);
 
-  return new Promise<string>((res, rej) => {
-    ws.on("finish", () => res(filename));
+  await new Promise<string>((res, rej) => {
+    ws.on("finish", res);
     ws.on("error", rej);
   });
+
+  return filename;
 }
 
 async function makeStatus() {
