@@ -1,4 +1,10 @@
-a nice bot 4 u.
+# wikihow bot
+
+your source for top hints on how to accomplish anything.
+
+![how to do anything!](https://i.imgur.com/mGGEvYm.png)
+
+![ANYTHING](https://i.imgur.com/BAtR7zP.png)
 
 dockerized. will regularly ~~~tweet and~~~ toot advice on how to do things.
 
