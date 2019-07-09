@@ -6,7 +6,7 @@ your source for top hints on how to accomplish anything.
 
 ![ANYTHING](https://i.imgur.com/BAtR7zP.png)
 
-dockerized. will regularly ~~~tweet and~~~ toot advice on how to do things.
+dockerized. will regularly ~~tweet and~~ toot advice on how to do things.
 
 _(twitter support probably won't be added due to twitter's changes in process
 for acquiring developer/api access.)_
