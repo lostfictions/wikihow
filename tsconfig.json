@@ -2,14 +2,18 @@
   "compilerOptions": {
     "target": "es2017",
     "module": "commonjs",
-    "outDir": "dist",
-    "allowJs": true,
+    "lib": [
+      "dom",
+      "es2017"
+    ],
     "strict": true,
-    "lib": ["dom", "es2017"],
     "sourceMap": true,
-    "rootDirs": ["./src"],
-    "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "rootDir": "./src",
+    "outDir": "dist"
   },
-  "include": ["./src/**/*"]
+  "include": [
+    "src"
+  ]
 }

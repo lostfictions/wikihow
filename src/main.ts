@@ -4,21 +4,14 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { createWriteStream } from "fs";
 
-import { scheduleJob } from "node-schedule";
-import { twoot } from "twoot";
 import axios from "axios";
-import * as cheerio from "cheerio";
-import { createCanvas, Image } from "canvas";
+import cheerio from "cheerio";
+import { createCanvas, Image, PNGStream } from "canvas";
+import Masto from "masto";
 
 import { randomInArray } from "./util";
-import { MASTODON_SERVER, MASTODON_TOKEN, CRON_RULE } from "./env";
 
-const twootConfigs = [
-  {
-    token: MASTODON_TOKEN,
-    server: MASTODON_SERVER
-  }
-];
+import { MASTODON_SERVER, MASTODON_TOKEN } from "./env";
 
 async function getWikihow() {
   let retries = 10;
@@ -69,7 +62,7 @@ async function getWikihow() {
 
 const tmp = tmpdir();
 let tmpFileCounter = 0;
-async function saveImage(url: string): Promise<string> {
+async function getImage(url: string): Promise<PNGStream> {
   const resp = await axios.get(url, {
     responseType: "arraybuffer"
   });
@@ -88,56 +81,59 @@ async function saveImage(url: string): Promise<string> {
   const ctx = canvas.getContext("2d")!;
   ctx.drawImage(image, 0, 0);
 
-  const rs = canvas.createPNGStream();
-
-  const filename = join(tmp, `wikibot_${tmpFileCounter++}.png`);
-
-  const ws = createWriteStream(filename);
-  rs.pipe(ws);
-
-  await new Promise<string>((res, rej) => {
-    ws.on("finish", res);
-    ws.on("error", rej);
-  });
-
-  return filename;
+  return canvas.createPNGStream();
 }
 
 async function makeStatus() {
   const { title } = await getWikihow();
   const { image } = await getWikihow();
-  const filename = await saveImage(image);
-  return { title, filename };
+  const pngStream = await getImage(image);
+  return { title, pngStream };
 }
 
-async function doTwoot(): Promise<void> {
-  try {
-    const { title, filename } = await makeStatus();
+// ////////////
 
-    const urls = await twoot(twootConfigs, title, [filename]);
-    console.log(
-      `[${new Date().toUTCString()}] twooted:\n${urls
-        .map(u => "\t -> " + u)
-        .join("\n")}`
-    );
-  } catch (e) {
-    console.error(e);
-  }
+async function doToot(): Promise<void> {
+  const { title, pngStream } = await makeStatus();
+
+  const masto = await Masto.login({
+    uri: MASTODON_SERVER,
+    accessToken: MASTODON_TOKEN
+  });
+
+  const { id } = await masto.uploadMediaAttachment({
+    file: pngStream,
+    description: title
+  });
+
+  const { created_at: time, uri: tootUri } = await masto.createStatus({
+    status: title,
+    visibility: "public",
+    media_ids: [id]
+  });
+
+  console.log(`${time} -> ${tootUri}`);
 }
 
-if (process.argv.slice(2).includes("local")) {
-  const localJob = () =>
-    makeStatus().then(({ title, filename }) => {
-      console.log(`${title}: file://${filename}`);
-      setTimeout(localJob, 5000);
+const argv = process.argv.slice(2);
+
+if (argv.includes("local")) {
+  console.log("Running locally!");
+  const loopToot = async () => {
+    const { title, pngStream } = await makeStatus();
+
+    const filename = join(tmp, `wikibot_${tmpFileCounter++}.png`);
+    const ws = createWriteStream(filename);
+    pngStream.pipe(ws);
+    await new Promise<string>((res, rej) => {
+      ws.on("finish", res);
+      ws.on("error", rej);
     });
 
-  localJob();
-  console.log("Running locally!");
+    console.log(title, `file://${filename}`);
+    setTimeout(loopToot, 1000);
+  };
+  loopToot();
 } else {
-  // we're running in production mode!
-  const job = scheduleJob(CRON_RULE, doTwoot);
-  const now = new Date(Date.now()).toUTCString();
-  const next = (job.nextInvocation() as any).toDate().toUTCString(); // bad typings
-  console.log(`[${now}] Bot is running! Next job scheduled for [${next}]`);
+  doToot().then(() => process.exit(0));
 }
