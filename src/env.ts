@@ -4,10 +4,9 @@ const env = envalid.cleanEnv(
   process.env,
   {
     MASTODON_SERVER: envalid.url({ default: "https://mastodon.social" }),
-    MASTODON_TOKEN: envalid.str(),
-    CRON_RULE: envalid.str({ default: "0 1,5,9,13,17,21 * * *" })
+    MASTODON_TOKEN: envalid.str()
   },
   { strict: true }
 );
 
-export const { MASTODON_SERVER, MASTODON_TOKEN, CRON_RULE } = env;
+export const { MASTODON_SERVER, MASTODON_TOKEN } = env;

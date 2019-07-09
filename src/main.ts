@@ -10,12 +10,15 @@ import { createCanvas, Image, PNGStream } from "canvas";
 import Masto from "masto";
 
 import { randomInArray } from "./util";
+import { getBlacklist } from "./util/blacklist";
 
 import { MASTODON_SERVER, MASTODON_TOKEN } from "./env";
 
+const blacklist = getBlacklist();
+
 async function getWikihow() {
   let retries = 10;
-  let title!: string;
+  let title: string | undefined = undefined;
   let imgs!: string[];
   async function requestAndParse() {
     const res = await axios.get("https://www.wikihow.com/Special:Randomizer");
@@ -38,12 +41,25 @@ async function getWikihow() {
   }
   await requestAndParse();
 
-  while ((!title || imgs.length === 0) && retries > 0) {
-    console.log(
-      `Can't retrieve valid random wikihow page, retrying... (${retries} tries remaining)`
-    );
-    retries--;
-    await requestAndParse();
+  const hasTitleAndImages = () => title && imgs.length > 0;
+  const isNotBlacklistedTitle = () => title && !blacklist.test(title);
+
+  while (!(hasTitleAndImages() && isNotBlacklistedTitle()) && retries > 0) {
+    if (!hasTitleAndImages()) {
+      console.warn(
+        `Can't retrieve valid random wikihow page, retrying... (${retries} tries remaining)`
+      );
+      retries--;
+      await requestAndParse();
+    }
+
+    if (!isNotBlacklistedTitle()) {
+      console.warn(
+        `Title matches blacklist: '${title}' (${retries} tries remaining)`
+      );
+      retries--;
+      await requestAndParse();
+    }
   }
 
   if (!title || imgs.length === 0) {
@@ -51,6 +67,10 @@ async function getWikihow() {
       `Unable to retrieve or parse a valid Wikihow page! Last result:\nTitle: "${title}"\nImages: [${imgs
         .map(i => `"${i}"`)
         .join(", ")}]`
+    );
+  } else if (title && blacklist.test(title)) {
+    throw new Error(
+      `Title matches blacklist: '${title}' (and retries expended.)`
     );
   }
 

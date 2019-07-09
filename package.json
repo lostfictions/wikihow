@@ -11,8 +11,8 @@
     "test": "run-s -l test:*",
     "test:ts": "tsc --noEmit",
     "test:lint": "eslint ./src --ext .ts,.tsx",
-    "test:prettier": "prettier 'src/**' -l",
-    "prettier": "prettier 'src/**' --write"
+    "test:prettier": "prettier 'src/**/*.{js,ts,jsx,tsx}' -l",
+    "prettier": "prettier 'src/**/*.{js,ts,jsx,tsx}' --write"
   },
   "author": "s <https://github.com/lostfictions>",
   "license": "AGPL-3.0",
@@ -22,7 +22,8 @@
     "cheerio": "^0.22.0",
     "envalid": "^5.0.0",
     "masto": "^2.1.1",
-    "source-map-support": "^0.5.12"
+    "source-map-support": "^0.5.12",
+    "wordfilter": "^0.2.6"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.12",
