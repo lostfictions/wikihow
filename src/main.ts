@@ -2,11 +2,11 @@ require("source-map-support").install();
 
 import { join } from "path";
 import { tmpdir } from "os";
-import { createWriteStream } from "fs";
+import { createWriteStream, createReadStream } from "fs";
 
 import axios from "axios";
 import cheerio from "cheerio";
-import { createCanvas, Image, PNGStream } from "canvas";
+import { createCanvas, Image, Canvas } from "canvas";
 import Masto from "masto";
 
 import { randomInArray } from "./util";
@@ -82,7 +82,7 @@ async function getWikihow() {
 
 const tmp = tmpdir();
 let tmpFileCounter = 0;
-async function getImage(url: string): Promise<PNGStream> {
+async function getImage(url: string): Promise<Canvas> {
   const resp = await axios.get(url, {
     responseType: "arraybuffer"
   });
@@ -101,28 +101,37 @@ async function getImage(url: string): Promise<PNGStream> {
   const ctx = canvas.getContext("2d")!;
   ctx.drawImage(image, 0, 0);
 
-  return canvas.createPNGStream();
+  return canvas;
 }
 
 async function makeStatus() {
   const { title } = await getWikihow();
   const { image } = await getWikihow();
-  const pngStream = await getImage(image);
-  return { title, pngStream };
+  const canvas = await getImage(image);
+  return { title, canvas };
 }
 
 // ////////////
 
 async function doToot(): Promise<void> {
-  const { title, pngStream } = await makeStatus();
+  const { title, canvas } = await makeStatus();
 
   const masto = await Masto.login({
     uri: MASTODON_SERVER,
     accessToken: MASTODON_TOKEN
   });
 
+  // we should be able to use canvas.toBuffer directly, but it seems to not work...
+  const filename = join(tmp, `wikibot_${tmpFileCounter++}.png`);
+  const ws = createWriteStream(filename);
+  canvas.createPNGStream().pipe(ws);
+  await new Promise<string>((res, rej) => {
+    ws.on("finish", res);
+    ws.on("error", rej);
+  });
+
   const { id } = await masto.uploadMediaAttachment({
-    file: pngStream,
+    file: createReadStream(filename),
     description: title
   });
 
@@ -140,11 +149,11 @@ const argv = process.argv.slice(2);
 if (argv.includes("local")) {
   console.log("Running locally!");
   const loopToot = async () => {
-    const { title, pngStream } = await makeStatus();
+    const { title, canvas } = await makeStatus();
 
     const filename = join(tmp, `wikibot_${tmpFileCounter++}.png`);
     const ws = createWriteStream(filename);
-    pngStream.pipe(ws);
+    canvas.createPNGStream().pipe(ws);
     await new Promise<string>((res, rej) => {
       ws.on("finish", res);
       ws.on("error", rej);
