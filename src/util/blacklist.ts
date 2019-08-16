@@ -12,11 +12,16 @@ export function getBlacklist() {
     "kill herself",
     "kill themsel\\w+",
     "miscarriages?",
-    "cancers?",
+    "cancer\\w*",
     "tumou?rs?",
     "black music",
     "blind people",
-    "blind person"
+    "blind person",
+    "molest\\w*",
+    "abus\\w+",
+    "assault\\w*",
+    "rape",
+    "rapists?"
   ];
 
   // words from the badwords list might be pluralized, etc.
