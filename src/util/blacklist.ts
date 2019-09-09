@@ -4,7 +4,7 @@ export function getBlacklist() {
   const extras = [
     "aids",
     "asperger'?s?",
-    "austis\\w+",
+    "autis\\w+",
     "abortions?",
     "suicides?",
     "kill yourself",
