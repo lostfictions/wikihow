@@ -17,6 +17,8 @@
   "author": "s <https://github.com/lostfictions>",
   "license": "AGPL-3.0",
   "dependencies": {
+    "@sentry/integrations": "^5.24.2",
+    "@sentry/node": "^5.24.2",
     "axios": "^0.20.0",
     "canvas": "^2.6.1",
     "cheerio": "^0.22.0",
