@@ -36,14 +36,15 @@ async function getWikihow() {
 
     imgs = $("img.whcdn")
       .toArray()
-      .map(img => img.attribs["data-src"])
-      .filter(url => url); // only images with this attribute!
+      .map((img) => img.attribs["data-src"])
+      .filter((url) => url); // only images with this attribute!
   }
   await requestAndParse();
 
   const hasTitleAndImages = () => title && imgs.length > 0;
   const isNotBlacklistedTitle = () => title && !blacklist.test(title);
 
+  /* eslint-disable no-await-in-loop */
   while (!(hasTitleAndImages() && isNotBlacklistedTitle()) && retries > 0) {
     if (!hasTitleAndImages()) {
       console.warn(
@@ -61,11 +62,12 @@ async function getWikihow() {
       await requestAndParse();
     }
   }
+  /* eslint-enable no-await-in-loop */
 
   if (!title || imgs.length === 0) {
     throw new Error(
       `Unable to retrieve or parse a valid Wikihow page! Last result:\nTitle: "${title}"\nImages: [${imgs
-        .map(i => `"${i}"`)
+        .map((i) => `"${i}"`)
         .join(", ")}]`
     );
   } else if (title && blacklist.test(title)) {
@@ -76,7 +78,7 @@ async function getWikihow() {
 
   return {
     title,
-    image: randomInArray(imgs)
+    image: randomInArray(imgs),
   };
 }
 
@@ -84,7 +86,7 @@ const tmp = tmpdir();
 let tmpFileCounter = 0;
 async function getImage(url: string): Promise<Canvas> {
   const resp = await axios.get(url, {
-    responseType: "arraybuffer"
+    responseType: "arraybuffer",
   });
 
   const image = new Image();
@@ -118,7 +120,7 @@ async function doToot(): Promise<void> {
 
   const masto = await Masto.login({
     uri: MASTODON_SERVER,
-    accessToken: MASTODON_TOKEN
+    accessToken: MASTODON_TOKEN,
   });
 
   // we should be able to use canvas.toBuffer directly, but it seems to not work...
@@ -130,15 +132,15 @@ async function doToot(): Promise<void> {
     ws.on("error", rej);
   });
 
-  const { id } = await masto.uploadMediaAttachment({
+  const { id } = await masto.createMediaAttachment({
     file: createReadStream(filename),
-    description: title
+    description: title,
   });
 
-  const { created_at: time, uri: tootUri } = await masto.createStatus({
+  const { createdAt: time, uri: tootUri } = await masto.createStatus({
     status: title,
     visibility: "public",
-    media_ids: [id]
+    mediaIds: [id],
   });
 
   console.log(`${time} -> ${tootUri}`);
@@ -160,9 +162,16 @@ if (argv.includes("local")) {
     });
 
     console.log(title, `file://${filename}`);
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setTimeout(loopToot, 1000);
   };
-  loopToot();
+  loopToot().catch((e) => {
+    throw e;
+  });
 } else {
-  doToot().then(() => process.exit(0));
+  doToot()
+    .then(() => process.exit(0))
+    .catch((e) => {
+      throw e;
+    });
 }

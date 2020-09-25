@@ -21,11 +21,11 @@ export function getBlacklist() {
     "abus\\w+",
     "assault\\w*",
     "rape",
-    "rapists?"
+    "rapists?",
   ];
 
   // words from the badwords list might be pluralized, etc.
-  const words = badwords.map(word => `${word}\\w*`).concat(extras);
+  const words = badwords.map((word) => `${word}\\w*`).concat(extras);
 
   const joined = [...new Set(words)].join("|");
 

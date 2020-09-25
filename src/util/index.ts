@@ -16,6 +16,8 @@ export function escapeForRegex(expression: string): string {
   return expression.replace(/[\\^$*+?.()|[\]{}]/g, "\\$&");
 }
 
+/* eslint-disable no-param-reassign, @typescript-eslint/unified-signatures */
+
 /** Returns a random number between min (inclusive) and max (inclusive). */
 export function randomFloat(max: number): number;
 export function randomFloat(min: number, max: number): number;
@@ -59,11 +61,12 @@ export function randomBag<T>(arr: T[], count: number = 1): T[] {
   return values;
 }
 
+/* eslint-enable no-param-reassign, @typescript-eslint/unified-signatures */
+
 export interface WeightedValues {
   [value: string]: number;
 }
-export function randomByWeight<T>(weights: [T, number][]): T;
-export function randomByWeight<T>(weights: Map<T, number>): T;
+export function randomByWeight<T>(weights: [T, number][] | Map<T, number>): T;
 export function randomByWeight<T extends WeightedValues, K extends keyof T>(
   weights: T
 ): K;
