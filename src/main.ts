@@ -121,6 +121,9 @@ async function doToot(): Promise<void> {
   const masto = await Masto.login({
     uri: MASTODON_SERVER,
     accessToken: MASTODON_TOKEN,
+    defaultOptions: {
+      timeout: 3 * 60 * 1000,
+    },
   });
 
   // we should be able to use canvas.toBuffer directly, but it seems to not work...
@@ -136,6 +139,8 @@ async function doToot(): Promise<void> {
     file: createReadStream(filename),
     description: title,
   });
+
+  await masto.waitForMediaAttachment(id);
 
   const { createdAt: time, uri: tootUri } = await masto.createStatus({
     status: title,
@@ -172,6 +177,8 @@ if (argv.includes("local")) {
   doToot()
     .then(() => process.exit(0))
     .catch((e) => {
-      throw e;
+      console.error(e.message);
+      console.error(e.stack);
+      process.exit(1);
     });
 }
