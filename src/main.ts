@@ -47,7 +47,7 @@ async function getWikihow() {
   /* eslint-disable no-await-in-loop */
   while (!(hasTitleAndImages() && isNotBlacklistedTitle()) && retries > 0) {
     if (!hasTitleAndImages()) {
-      console.warn(
+      console.log(
         `Can't retrieve valid random wikihow page, retrying... (${retries} tries remaining)`
       );
       retries--;
@@ -55,7 +55,7 @@ async function getWikihow() {
     }
 
     if (!isNotBlacklistedTitle()) {
-      console.warn(
+      console.log(
         `Title matches blacklist: '${title}' (${retries} tries remaining)`
       );
       retries--;
