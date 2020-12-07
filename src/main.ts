@@ -90,7 +90,7 @@ async function getImage(url: string): Promise<Canvas> {
   });
 
   const image = new Image();
-  const imageLoad = new Promise((res, rej) => {
+  const imageLoad = new Promise<void>((res, rej) => {
     image.onload = res;
     image.onerror = rej;
   });
