@@ -7,16 +7,21 @@ import { createWriteStream, createReadStream } from "fs";
 import axios from "axios";
 import cheerio from "cheerio";
 import { createCanvas, Image, Canvas } from "canvas";
-import { login } from "masto";
+import { login, FacadeRepositories as MastoClient } from "masto";
 
 import { randomInArray } from "./util";
 import { getBlacklist } from "./util/blacklist";
 
-import { MASTODON_SERVER, MASTODON_TOKEN } from "./env";
+import {
+  MASTODON_SERVER,
+  MASTODON_SERVER_ORIG,
+  MASTODON_TOKEN,
+  MASTODON_TOKEN_ORIG,
+} from "./env";
 
 const blacklist = getBlacklist();
 
-async function getWikihow() {
+async function getWikihow(): Promise<{ title: string; image: string }> {
   let retries = 10;
   let title: string | undefined = undefined;
   let imgs!: string[];
@@ -111,31 +116,20 @@ async function getImage(url: string): Promise<Canvas> {
 
 async function makeStatus() {
   const { title } = await getWikihow();
-  const { image } = await getWikihow();
+  const { title: titleOrig, image } = await getWikihow();
   const canvas = await getImage(image);
-  return { title, canvas };
+  return { title, titleOrig, canvas };
 }
 
-// ////////////
-
-async function doToot(): Promise<void> {
-  const { title, canvas } = await makeStatus();
-
-  const masto = await login({
-    url: MASTODON_SERVER,
-    accessToken: MASTODON_TOKEN,
-    timeout: 3 * 60 * 1000,
-  });
-
-  // we should be able to use canvas.toBuffer directly, but it seems to not work...
-  const filename = join(tmp, `wikibot_${tmpFileCounter++}.png`);
-  const ws = createWriteStream(filename);
-  canvas.createPNGStream().pipe(ws);
-  await new Promise<string>((res, rej) => {
-    ws.on("finish", res);
-    ws.on("error", rej);
-  });
-
+async function uploadAndPost({
+  masto,
+  filename,
+  title,
+}: {
+  masto: MastoClient;
+  filename: string;
+  title: string;
+}) {
   const { id } = await masto.mediaAttachments.create({
     file: createReadStream(filename),
     description: title,
@@ -149,7 +143,39 @@ async function doToot(): Promise<void> {
     mediaIds: [id],
   });
 
-  console.log(`${time} -> ${tootUri}`);
+  return { time, tootUri };
+}
+
+async function doToot(): Promise<void> {
+  const { title, titleOrig, canvas } = await makeStatus();
+
+  const masto = await login({
+    url: MASTODON_SERVER,
+    accessToken: MASTODON_TOKEN,
+    timeout: 3 * 60 * 1000,
+  });
+
+  const mastoOrig = await login({
+    url: MASTODON_SERVER_ORIG,
+    accessToken: MASTODON_TOKEN_ORIG,
+    timeout: 3 * 60 * 1000,
+  });
+
+  // we should be able to use canvas.toBuffer directly, but it seems to not work...
+  const filename = join(tmp, `wikibot_${tmpFileCounter++}.png`);
+  const ws = createWriteStream(filename);
+  canvas.createPNGStream().pipe(ws);
+  await new Promise<string>((res, rej) => {
+    ws.on("finish", res);
+    ws.on("error", rej);
+  });
+
+  const res = await Promise.all([
+    uploadAndPost({ masto, filename, title }),
+    uploadAndPost({ masto: mastoOrig, filename, title: titleOrig }),
+  ]);
+
+  console.log(res.map((r) => `${r.time} -> ${r.tootUri}`).join("\n"));
 }
 
 const argv = process.argv.slice(2);
