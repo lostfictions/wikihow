@@ -7,7 +7,7 @@ import { createWriteStream, createReadStream } from "fs";
 import axios from "axios";
 import cheerio from "cheerio";
 import { createCanvas, Image, Canvas } from "canvas";
-import Masto from "masto";
+import { login } from "masto";
 
 import { randomInArray } from "./util";
 import { getBlacklist } from "./util/blacklist";
@@ -20,6 +20,7 @@ async function getWikihow() {
   let retries = 10;
   let title: string | undefined = undefined;
   let imgs!: string[];
+
   async function requestAndParse() {
     const res = await axios.get("https://www.wikihow.com/Special:Randomizer");
 
@@ -39,6 +40,7 @@ async function getWikihow() {
       .map((img) => img.attribs["data-src"])
       .filter((url) => url); // only images with this attribute!
   }
+
   await requestAndParse();
 
   const hasTitleAndImages = () => title && imgs.length > 0;
@@ -84,6 +86,7 @@ async function getWikihow() {
 
 const tmp = tmpdir();
 let tmpFileCounter = 0;
+
 async function getImage(url: string): Promise<Canvas> {
   const resp = await axios.get(url, {
     responseType: "arraybuffer",
@@ -118,12 +121,10 @@ async function makeStatus() {
 async function doToot(): Promise<void> {
   const { title, canvas } = await makeStatus();
 
-  const masto = await Masto.login({
-    uri: MASTODON_SERVER,
+  const masto = await login({
+    url: MASTODON_SERVER,
     accessToken: MASTODON_TOKEN,
-    defaultOptions: {
-      timeout: 3 * 60 * 1000,
-    },
+    timeout: 3 * 60 * 1000,
   });
 
   // we should be able to use canvas.toBuffer directly, but it seems to not work...
@@ -135,14 +136,14 @@ async function doToot(): Promise<void> {
     ws.on("error", rej);
   });
 
-  const { id } = await masto.createMediaAttachment({
+  const { id } = await masto.mediaAttachments.create({
     file: createReadStream(filename),
     description: title,
   });
 
-  await masto.waitForMediaAttachment(id);
+  await masto.mediaAttachments.waitFor(id);
 
-  const { createdAt: time, uri: tootUri } = await masto.createStatus({
+  const { createdAt: time, uri: tootUri } = await masto.statuses.create({
     status: title,
     visibility: "public",
     mediaIds: [id],
