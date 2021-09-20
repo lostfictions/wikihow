@@ -7,7 +7,7 @@ import { createWriteStream, createReadStream } from "fs";
 import axios from "axios";
 import cheerio from "cheerio";
 import { createCanvas, Image, Canvas } from "canvas";
-import { login, FacadeRepositories as MastoClient } from "masto";
+import { login, MastoClient } from "masto";
 
 import { randomInArray } from "./util";
 import { getBlacklist } from "./util/blacklist";
