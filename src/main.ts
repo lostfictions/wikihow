@@ -25,12 +25,14 @@ export let tmpFileCounter = 0;
 async function main() {
   const { title, titleOrig, canvas } = await makeStatus();
 
+  const buffer = canvas.toBuffer();
+
   const results = await Promise.allSettled([
     doTwoot(
       [
         {
           status: title,
-          media: canvas.toBuffer(),
+          media: buffer,
         },
       ],
       [
@@ -48,7 +50,7 @@ async function main() {
       [
         {
           status: titleOrig,
-          media: canvas.toBuffer(),
+          media: buffer,
         },
       ],
       [

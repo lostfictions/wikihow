@@ -7,7 +7,7 @@ import { setTimeout } from "timers/promises";
 import { login } from "masto";
 import { TwitterClient } from "twitter-api-client";
 import retry from "async-retry";
-import { v4 as uuid } from "uuid";
+import { nanoid } from "nanoid";
 
 type Status =
   | string
@@ -95,7 +95,7 @@ export async function doToot(
     if (typeof s === "object") {
       if ("media" in s) {
         // kludge: buffer uploads don't seem to work, so write them to a temp file first.
-        const path = join(tmpdir(), `masto-upload-${Date.now()}.png`);
+        const path = join(tmpdir(), `masto-upload-${nanoid()}.png`);
         await writeFile(path, s.media);
 
         const { id } = await masto.mediaAttachments.create({
@@ -118,7 +118,7 @@ export async function doToot(
       }
     }
 
-    const idempotencyKey = uuid();
+    const idempotencyKey = nanoid();
 
     const publishedToot = await retry(
       // eslint-disable-next-line @typescript-eslint/no-loop-func
