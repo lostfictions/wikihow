@@ -1,189 +1,79 @@
 require("source-map-support").install();
 
-import { join } from "path";
 import { tmpdir } from "os";
-import { createWriteStream, createReadStream } from "fs";
+import { join } from "path";
+import { createWriteStream } from "fs";
+import { setTimeout } from "timers/promises";
 
-import axios from "axios";
-import cheerio from "cheerio";
-import { createCanvas, Image, Canvas } from "canvas";
-import { login, MastoClient } from "masto";
-
-import { randomInArray } from "./util";
-import { getBlacklist } from "./util/blacklist";
+import { makeStatus } from "./generate";
+import { doTwoot } from "./twoot";
 
 import {
   MASTODON_SERVER,
   MASTODON_SERVER_ORIG,
   MASTODON_TOKEN,
   MASTODON_TOKEN_ORIG,
+  TWITTER_API_KEY,
+  TWITTER_API_SECRET,
+  TWITTER_ACCESS_TOKEN,
+  TWITTER_ACCESS_SECRET,
 } from "./env";
 
-const blacklist = getBlacklist();
+export const tmp = tmpdir();
+export let tmpFileCounter = 0;
 
-async function getWikihow(): Promise<{ title: string; image: string }> {
-  let retries = 10;
-  let title: string | undefined = undefined;
-  let imgs!: string[];
-
-  async function requestAndParse() {
-    const res = await axios.get("https://www.wikihow.com/Special:Randomizer");
-
-    const $ = cheerio.load(res.data);
-
-    const headerList = $("h1");
-    if (headerList.length > 1) {
-      console.warn(
-        `List of <h1> tags has more than one item! Title format might have changed.`
-      );
-    }
-
-    title = headerList.first().text();
-
-    imgs = $("img.whcdn")
-      .toArray()
-      .map((img) => img.attribs["data-src"])
-      .filter((url) => url); // only images with this attribute!
-  }
-
-  await requestAndParse();
-
-  const hasTitleAndImages = () => title && imgs.length > 0;
-  const isNotBlacklistedTitle = () => title && !blacklist.test(title);
-
-  /* eslint-disable no-await-in-loop */
-  while (!(hasTitleAndImages() && isNotBlacklistedTitle()) && retries > 0) {
-    if (!hasTitleAndImages()) {
-      console.log(
-        `Can't retrieve valid random wikihow page, retrying... (${retries} tries remaining)`
-      );
-      retries--;
-      await requestAndParse();
-    }
-
-    if (!isNotBlacklistedTitle()) {
-      console.log(
-        `Title matches blacklist: '${title}' (${retries} tries remaining)`
-      );
-      retries--;
-      await requestAndParse();
-    }
-  }
-  /* eslint-enable no-await-in-loop */
-
-  if (!title || imgs.length === 0) {
-    throw new Error(
-      `Unable to retrieve or parse a valid Wikihow page! Last result:\nTitle: "${title}"\nImages: [${imgs
-        .map((i) => `"${i}"`)
-        .join(", ")}]`
-    );
-  } else if (title && blacklist.test(title)) {
-    throw new Error(
-      `Title matches blacklist: '${title}' (and retries expended.)`
-    );
-  }
-
-  return {
-    title,
-    image: randomInArray(imgs),
-  };
-}
-
-const tmp = tmpdir();
-let tmpFileCounter = 0;
-
-async function getImage(url: string): Promise<Canvas> {
-  const resp = await axios.get(url, {
-    responseType: "arraybuffer",
-  });
-
-  const image = new Image();
-  const imageLoad = new Promise<void>((res, rej) => {
-    image.onload = res;
-    image.onerror = rej;
-  });
-  image.src = resp.data;
-  await imageLoad;
-
-  // crop the image. 93% height is a rough estimate for getting rid of the
-  // watermark.
-  const canvas = createCanvas(image.width, image.height * 0.93);
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(image, 0, 0);
-
-  return canvas;
-}
-
-async function makeStatus() {
-  const { title } = await getWikihow();
-  const { title: titleOrig, image } = await getWikihow();
-  const canvas = await getImage(image);
-  return { title, titleOrig, canvas };
-}
-
-async function uploadAndPost({
-  masto,
-  filename,
-  title,
-}: {
-  masto: MastoClient;
-  filename: string;
-  title: string;
-}) {
-  const { id } = await masto.mediaAttachments.create({
-    file: createReadStream(filename),
-    description: title,
-  });
-
-  await masto.mediaAttachments.waitFor(id);
-
-  const { createdAt: time, uri: tootUri } = await masto.statuses.create({
-    status: title,
-    visibility: "public",
-    mediaIds: [id],
-  });
-
-  return { time, tootUri };
-}
-
-async function doToot(): Promise<void> {
+async function main() {
   const { title, titleOrig, canvas } = await makeStatus();
 
-  const masto = await login({
-    url: MASTODON_SERVER,
-    accessToken: MASTODON_TOKEN,
-    timeout: 3 * 60 * 1000,
-  });
-
-  const mastoOrig = await login({
-    url: MASTODON_SERVER_ORIG,
-    accessToken: MASTODON_TOKEN_ORIG,
-    timeout: 3 * 60 * 1000,
-  });
-
-  // we should be able to use canvas.toBuffer directly, but it seems to not work...
-  const filename = join(tmp, `wikibot_${tmpFileCounter++}.png`);
-  const ws = createWriteStream(filename);
-  canvas.createPNGStream().pipe(ws);
-  await new Promise<string>((res, rej) => {
-    ws.on("finish", res);
-    ws.on("error", rej);
-  });
-
-  const res = await Promise.all([
-    uploadAndPost({ masto, filename, title }),
-    uploadAndPost({ masto: mastoOrig, filename, title: titleOrig }),
+  const results = await Promise.allSettled([
+    doTwoot(
+      [
+        {
+          status: title,
+          media: canvas.toBuffer(),
+        },
+      ],
+      [
+        { type: "mastodon", server: MASTODON_SERVER, token: MASTODON_TOKEN },
+        {
+          type: "twitter",
+          apiKey: TWITTER_API_KEY,
+          apiSecret: TWITTER_API_SECRET,
+          accessToken: TWITTER_ACCESS_TOKEN,
+          accessSecret: TWITTER_ACCESS_SECRET,
+        },
+      ]
+    ),
+    doTwoot(
+      [
+        {
+          status: titleOrig,
+          media: canvas.toBuffer(),
+        },
+      ],
+      [
+        {
+          type: "mastodon",
+          server: MASTODON_SERVER_ORIG,
+          token: MASTODON_TOKEN_ORIG,
+        },
+      ]
+    ),
   ]);
 
-  console.log(res.map((r) => `${r.time} -> ${r.tootUri}`).join("\n"));
+  if (results.some((r) => r.status === "rejected")) {
+    throw new Error(
+      `Failed to twoot: ${JSON.stringify(results, undefined, 2)}`
+    );
+  }
 }
 
 const argv = process.argv.slice(2);
 
 if (argv.includes("local")) {
   console.log("Running locally!");
-  const loopToot = async () => {
-    const { title, canvas } = await makeStatus();
+  const createAndSave = async () => {
+    const { title, titleOrig, canvas } = await makeStatus();
 
     const filename = join(tmp, `wikibot_${tmpFileCounter++}.png`);
     const ws = createWriteStream(filename);
@@ -193,15 +83,13 @@ if (argv.includes("local")) {
       ws.on("error", rej);
     });
 
-    console.log(title, `file://${filename}`);
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setTimeout(loopToot, 1000);
+    console.log(`${title}\n${titleOrig}\nfile://${filename}`);
+    await setTimeout(1000);
+    void createAndSave();
   };
-  loopToot().catch((e) => {
-    throw e;
-  });
+  void createAndSave();
 } else {
-  doToot()
+  main()
     .then(() => process.exit(0))
     .catch((e) => {
       console.error(e.message);
