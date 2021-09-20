@@ -2,7 +2,7 @@
 
 your source for top hints on how to accomplish anything.
 
-**https://twitter.com/**
+**https://twitter.com/wikihow_tips**
 
 **https://mastodon.social/@wikihow**
 
