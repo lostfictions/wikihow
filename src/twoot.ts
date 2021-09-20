@@ -51,6 +51,7 @@ export async function doTwoot(statuses: Status[], apiConfigs: APIConfig[]) {
     const c = apiConfigs[i];
     return {
       ...r,
+      index: i,
       type: c.type,
       server: c.type === "mastodon" ? c.server : undefined,
     };
@@ -58,7 +59,23 @@ export async function doTwoot(statuses: Status[], apiConfigs: APIConfig[]) {
 
   if (results.every((r) => r.status === "rejected")) {
     throw new Error(
-      `Failed to tweet/toot:\n${JSON.stringify(results, undefined, 2)}`
+      `Failed to tweet/toot:\n${results
+        .map((r) => {
+          if (r.status === "rejected") {
+            const reason = (r as PromiseRejectedResult).reason;
+            const message =
+              reason instanceof Error
+                ? reason.toString()
+                : JSON.stringify(reason);
+
+            return `(config ${r.index}: ${r.type}${
+              r.server ? ` (${r.server})` : ""
+            })\n${message}`;
+          }
+
+          return `${r.type}${r.server ? ` (${r.server})` : ""}: ok`;
+        })
+        .join("\n\n")}`
     );
   }
 
@@ -93,6 +110,16 @@ export async function doToot(
 
     let mediaId: string | null = null;
     if (typeof s === "object") {
+      // form-data really doesn't like undefined fields, so add them explicitly
+      // one-by-one.
+      const config: Record<string, any> = {};
+      if ("caption" in s) {
+        config.caption = s.caption;
+      }
+      if ("focus" in s) {
+        config.focus = s.focus;
+      }
+
       if ("media" in s) {
         // kludge: buffer uploads don't seem to work, so write them to a temp file first.
         const path = join(tmpdir(), `masto-upload-${nanoid()}.png`);
@@ -100,8 +127,7 @@ export async function doToot(
 
         const { id } = await masto.mediaAttachments.create({
           file: createReadStream(path),
-          description: s.caption,
-          focus: s.focus,
+          ...config,
         });
 
         await unlink(path);
@@ -110,8 +136,7 @@ export async function doToot(
       } else {
         const { id } = await masto.mediaAttachments.create({
           file: createReadStream(s.pathToMedia),
-          description: s.caption,
-          focus: s.focus,
+          ...config,
         });
 
         mediaId = id;

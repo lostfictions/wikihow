@@ -63,9 +63,12 @@ async function main() {
     ),
   ]);
 
-  if (results.some((r) => r.status === "rejected")) {
+  const errors = results.filter((r) => r.status === "rejected");
+  if (errors.length > 0) {
     throw new Error(
-      `Failed to twoot: ${JSON.stringify(results, undefined, 2)}`
+      `Failed to twoot in main:\n${errors
+        .map((r) => String((r as PromiseRejectedResult).reason))
+        .join("\n")}`
     );
   }
 }
@@ -91,11 +94,5 @@ if (argv.includes("local")) {
   };
   void createAndSave();
 } else {
-  main()
-    .then(() => process.exit(0))
-    .catch((e) => {
-      console.error(e.message);
-      console.error(e.stack);
-      process.exit(1);
-    });
+  void main().then(() => process.exit(0));
 }
