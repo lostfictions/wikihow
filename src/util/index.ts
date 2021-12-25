@@ -50,7 +50,7 @@ export function randomInArray<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function randomBag<T>(arr: T[], count: number = 1): T[] {
+export function randomBag<T>(arr: T[], count = 1): T[] {
   if (count === 1) return [randomInArray(arr)];
   const values = [];
   const bag = [...arr];
