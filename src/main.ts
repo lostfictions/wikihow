@@ -1,5 +1,3 @@
-require("source-map-support").install();
-
 import { tmpdir } from "os";
 import { join } from "path";
 import { createWriteStream } from "fs";

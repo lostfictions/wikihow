@@ -62,7 +62,7 @@ export async function doTwoot(statuses: Status[], apiConfigs: APIConfig[]) {
       `Failed to tweet/toot:\n${results
         .map((r) => {
           if (r.status === "rejected") {
-            const reason = (r as PromiseRejectedResult).reason;
+            const { reason } = r as PromiseRejectedResult;
             const message =
               reason instanceof Error
                 ? reason.toString()
@@ -104,7 +104,7 @@ export async function doToot(
   let inReplyToId: string | null | undefined = null;
 
   let i = 0;
-  /* eslint-disable no-await-in-loop */
+
   for (const s of statuses) {
     const { status } = typeof s === "string" ? { status: s } : s;
 
@@ -150,7 +150,7 @@ export async function doToot(
       () =>
         masto.statuses.create(
           {
-            status: status,
+            status,
             visibility: "public",
             inReplyToId,
             mediaIds: mediaId ? [mediaId] : undefined,
@@ -170,7 +170,6 @@ export async function doToot(
       await setTimeout(3000);
     }
   }
-  /* eslint-enable no-await-in-loop */
 }
 
 export async function doTweet(
@@ -187,7 +186,7 @@ export async function doTweet(
   let inReplyToId: string | undefined = undefined;
 
   let i = 0;
-  /* eslint-disable no-await-in-loop */
+
   for (const s of statuses) {
     const { status } = typeof s === "string" ? { status: s } : s;
 
@@ -238,5 +237,4 @@ export async function doTweet(
       await setTimeout(3000);
     }
   }
-  /* eslint-enable no-await-in-loop */
 }

@@ -82,10 +82,10 @@ export function randomByWeight(
 
   const keys: any[] = [];
   const values: number[] = [];
-  weightPairs.forEach(([k, v]) => {
+  for (const [k, v] of weightPairs) {
     keys.push(k);
     values.push(v);
-  });
+  }
 
   const sum = values.reduce((p, c) => {
     if (c < 0) throw new Error("Negative weight!");
@@ -123,7 +123,8 @@ export function rgbToHSV(
   const diffc = (c: number) => (v - c) / 6 / diff + 1 / 2;
 
   if (diff === 0) {
-    h = s = 0;
+    h = 0;
+    s = 0;
   } else {
     s = diff / v;
     const rdif = diffc(r);

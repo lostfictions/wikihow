@@ -36,7 +36,6 @@ async function getWikihow(): Promise<{ title: string; image: string }> {
   const hasTitleAndImages = () => title && imgs.length > 0;
   const isNotBlacklistedTitle = () => title && !blacklist.test(title);
 
-  /* eslint-disable no-await-in-loop */
   while (!(hasTitleAndImages() && isNotBlacklistedTitle()) && retries > 0) {
     if (!hasTitleAndImages()) {
       console.log(
@@ -54,7 +53,7 @@ async function getWikihow(): Promise<{ title: string; image: string }> {
       await requestAndParse();
     }
   }
-  /* eslint-enable no-await-in-loop */
+
   if (!title || imgs.length === 0) {
     throw new Error(
       `Unable to retrieve or parse a valid Wikihow page! Last result:\nTitle: "${title}"\nImages: [${imgs
