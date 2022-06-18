@@ -1,3 +1,4 @@
+/* eslint-disable node/no-process-env */
 import * as Sentry from "@sentry/node";
 import { CaptureConsole } from "@sentry/integrations";
 import { parseEnv, z } from "znv";
@@ -17,13 +18,13 @@ export const {
   TWITTER_ACCESS_SECRET,
   SENTRY_DSN,
 } = parseEnv(process.env, {
-  MASTODON_TOKEN: z.string().nonempty(),
-  MASTODON_TOKEN_ORIG: z.string().nonempty(),
-  TWITTER_API_KEY: z.string().nonempty(),
-  TWITTER_API_SECRET: z.string().nonempty(),
-  TWITTER_ACCESS_TOKEN: z.string().nonempty(),
-  TWITTER_ACCESS_SECRET: z.string().nonempty(),
-  SENTRY_DSN: z.string().nonempty().optional(),
+  MASTODON_TOKEN: z.string().min(1),
+  MASTODON_TOKEN_ORIG: z.string().min(1),
+  TWITTER_API_KEY: z.string().min(1),
+  TWITTER_API_SECRET: z.string().min(1),
+  TWITTER_ACCESS_TOKEN: z.string().min(1),
+  TWITTER_ACCESS_SECRET: z.string().min(1),
+  SENTRY_DSN: z.string().min(1).optional(),
 });
 
 /** account to which to toot images with a random caption from a different article. */
