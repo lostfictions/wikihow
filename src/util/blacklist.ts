@@ -25,6 +25,7 @@ export function getBlacklist() {
     "schizo",
     "injection",
     "suppositor\\w+",
+    "genital",
   ];
 
   // words from the badwords list might be pluralized, etc.
