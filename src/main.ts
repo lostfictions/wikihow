@@ -2,9 +2,9 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { createWriteStream } from "fs";
 import { setTimeout } from "timers/promises";
+import { twoot } from "twoot";
 
 import { makeStatus } from "./generate";
-import { doTwoot } from "./twoot";
 
 import {
   MASTODON_SERVER,
@@ -26,13 +26,11 @@ async function main() {
   const buffer = canvas.toBuffer();
 
   const results = await Promise.allSettled([
-    doTwoot(
-      [
-        {
-          status: title,
-          media: buffer,
-        },
-      ],
+    twoot(
+      {
+        status: title,
+        media: [{ buffer }],
+      },
       [
         { type: "mastodon", server: MASTODON_SERVER, token: MASTODON_TOKEN },
         {
@@ -44,13 +42,11 @@ async function main() {
         },
       ]
     ),
-    doTwoot(
-      [
-        {
-          status: titleOrig,
-          media: buffer,
-        },
-      ],
+    twoot(
+      {
+        status: titleOrig,
+        media: [{ buffer }],
+      },
       [
         {
           type: "mastodon",
