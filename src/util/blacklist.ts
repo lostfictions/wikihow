@@ -30,6 +30,14 @@ export function getBlacklist() {
     "vagina\\w*",
     "clitor\\w+",
     "testic\\w+",
+    "bladder",
+    "prostate",
+    "sphincter",
+    "prolapse",
+    "rectum",
+    "urin\\w+",
+    "UTI",
+    "yeast infection",
   ];
 
   // words from the badwords list might be pluralized, etc.
