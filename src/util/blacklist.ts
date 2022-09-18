@@ -35,6 +35,7 @@ export function getBlacklist() {
     "sphincter",
     "prolapse",
     "rectum",
+    "trichomoniasis",
     "urin\\w+",
     "UTI",
     "yeast infection",
