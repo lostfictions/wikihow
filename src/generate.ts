@@ -1,5 +1,5 @@
 import axios from "axios";
-import cheerio from "cheerio";
+import { load } from "cheerio";
 import { createCanvas, Image, Canvas } from "canvas";
 import { randomInArray } from "./util";
 import { getBlacklist } from "./util/blacklist";
@@ -12,9 +12,11 @@ async function getWikihow(): Promise<{ title: string; image: string }> {
   let imgs!: string[];
 
   async function requestAndParse() {
-    const res = await axios.get("https://www.wikihow.com/Special:Randomizer");
+    const res = await axios.get("https://www.wikihow.com/Special:Randomizer", {
+      responseType: "text",
+    });
 
-    const $ = cheerio.load(res.data);
+    const $ = load(res.data);
 
     const headerList = $("h1");
     if (headerList.length > 1) {
@@ -93,6 +95,7 @@ async function getImage(url: string): Promise<Canvas> {
 
   return canvas;
 }
+
 export async function makeStatus() {
   const { title } = await getWikihow();
   const { title: titleOrig, image } = await getWikihow();
