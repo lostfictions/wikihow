@@ -1,4 +1,6 @@
-FROM node:16.15.1 AS build
+ARG NODE_VERSION
+
+FROM node:${NODE_VERSION} AS build
 WORKDIR /code
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
@@ -8,7 +10,7 @@ COPY tsconfig.json ./
 # node_modules after the build is done.
 RUN yarn build && yarn install --frozen-lockfile --production --offline
 
-FROM node:16.15.1
+FROM node:${NODE_VERSION}
 WORKDIR /code
 # https://stackoverflow.com/questions/37458287/how-to-run-a-cron-job-inside-a-docker-container
 # hadolint ignore=DL3008

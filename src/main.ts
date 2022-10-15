@@ -82,7 +82,7 @@ if (argv.includes("local")) {
       ws.on("error", rej);
     });
 
-    console.log(`${title}\n${titleOrig}\nfile://${filename}`);
+    console.log(`"${title}"\n(Original: "${titleOrig}")\nfile://${filename}\n`);
     await setTimeout(1000);
     void createAndSave();
   };
