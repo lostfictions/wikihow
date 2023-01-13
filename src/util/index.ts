@@ -13,7 +13,7 @@ export function wrap(value: number, max: number) {
  * @returns The escaped string, usable in a regular expression constructor.
  */
 export function escapeForRegex(expression: string): string {
-  return expression.replace(/[\\^$*+?.()|[\]{}]/g, "\\$&");
+  return expression.replaceAll(/[\\^$*+?.()|[\]{}]/g, "\\$&");
 }
 
 /* eslint-disable no-param-reassign, @typescript-eslint/unified-signatures */
@@ -22,7 +22,7 @@ export function escapeForRegex(expression: string): string {
 export function randomFloat(max: number): number;
 export function randomFloat(min: number, max: number): number;
 export function randomFloat(min: number, max?: number): number {
-  if (typeof max === "undefined") {
+  if (max === undefined) {
     max = min;
     min = 0;
   }
@@ -36,7 +36,7 @@ export function randomFloat(min: number, max?: number): number {
 export function randomInt(max: number): number;
 export function randomInt(min: number, max: number): number;
 export function randomInt(min: number, max?: number): number {
-  if (typeof max === "undefined") {
+  if (max === undefined) {
     max = min;
     min = 0;
   }
