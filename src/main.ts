@@ -3,6 +3,7 @@ import { join } from "path";
 import { createWriteStream } from "fs";
 import { setTimeout } from "timers/promises";
 import { twoot } from "twoot";
+import { captureException } from "@sentry/node";
 
 import { makeStatus } from "./generate";
 
@@ -32,7 +33,11 @@ async function main() {
         media: [{ buffer }],
       },
       [
-        { type: "mastodon", server: MASTODON_SERVER, token: MASTODON_TOKEN },
+        {
+          type: "mastodon",
+          server: MASTODON_SERVER,
+          token: MASTODON_TOKEN,
+        },
         {
           type: "twitter",
           apiKey: TWITTER_API_KEY,
@@ -60,9 +65,9 @@ async function main() {
   const errors = results.filter((r) => r.status === "rejected");
   if (errors.length > 0) {
     throw new Error(
-      `Failed to twoot in main:\n${errors
-        .map((r) => String((r as PromiseRejectedResult).reason))
-        .join("\n")}`
+      `${errors.length} failure(s) when twooting:\n\n${errors
+        .map((r, i) => `${i}. ${String((r as PromiseRejectedResult).reason)}`)
+        .join("\n\n")}\n`
     );
   }
 }
@@ -88,5 +93,7 @@ if (argv.includes("local")) {
   };
   void createAndSave();
 } else {
-  void main().then(() => process.exit(0));
+  void main()
+    .then(() => process.exit(0))
+    .catch((e) => captureException(e));
 }

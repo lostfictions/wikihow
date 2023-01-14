@@ -18,6 +18,7 @@ jobs:
       - run: yarn build
       - run: yarn start
         env:
+          NODE_ENV: "production"
           MASTODON_TOKEN: ${{ secrets.MASTODON_TOKEN }}
           MASTODON_TOKEN_ORIG: ${{ secrets.MASTODON_TOKEN_ORIG }}
           TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
