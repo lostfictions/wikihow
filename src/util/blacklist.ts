@@ -44,6 +44,7 @@ export function getBlacklist() {
     "yeast infection",
     "pubic",
     "pube\\w*",
+    "rectal exam",
   ];
 
   // words from the badwords list might be pluralized, etc.
