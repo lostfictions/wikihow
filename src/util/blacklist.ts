@@ -49,6 +49,7 @@ export function getBlacklist() {
     "pubic",
     "pube\\w*",
     "rectal exam",
+    "field dress",
   ];
 
   // words from the badwords list might be pluralized, etc.
