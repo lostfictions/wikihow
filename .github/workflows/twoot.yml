@@ -13,10 +13,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version-file: ".node-version"
-          cache: "yarn"
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
-      - run: yarn start
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm start
         env:
           NODE_ENV: "production"
           MASTODON_TOKEN: ${{ secrets.MASTODON_TOKEN }}
