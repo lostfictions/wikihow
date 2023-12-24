@@ -55,7 +55,7 @@ export const MASTODON_SERVER_ORIG = "https://botsin.space";
 
 if (!SENTRY_DSN && !isDev) {
   console.warn(
-    `Sentry DSN is invalid! Error reporting to Sentry will be disabled.`
+    `Sentry DSN is invalid! Error reporting to Sentry will be disabled.`,
   );
 } else {
   Sentry.init({

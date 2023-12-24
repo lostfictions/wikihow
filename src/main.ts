@@ -1,6 +1,6 @@
 import { tmpdir } from "os";
 import { join } from "path";
-import { createWriteStream } from "fs";
+import { writeFile } from "fs/promises";
 import { setTimeout } from "timers/promises";
 import { twoot } from "twoot";
 import { captureException } from "@sentry/node";
@@ -24,7 +24,7 @@ export let tmpFileCounter = 0;
 async function main() {
   const { title, titleOrig, canvas } = await makeStatus();
 
-  const buffer = canvas.toBuffer();
+  const buffer = canvas.toBuffer("image/png");
 
   const results = await Promise.allSettled([
     twoot(
@@ -45,7 +45,7 @@ async function main() {
           accessToken: TWITTER_ACCESS_TOKEN,
           accessSecret: TWITTER_ACCESS_SECRET,
         },
-      ]
+      ],
     ),
     twoot(
       {
@@ -58,7 +58,7 @@ async function main() {
           server: MASTODON_SERVER_ORIG,
           token: MASTODON_TOKEN_ORIG,
         },
-      ]
+      ],
     ),
   ]);
 
@@ -67,7 +67,7 @@ async function main() {
     throw new Error(
       `${errors.length} failure(s) when twooting:\n\n${errors
         .map((r, i) => `${i}. ${String((r as PromiseRejectedResult).reason)}`)
-        .join("\n\n")}\n`
+        .join("\n\n")}\n`,
     );
   }
 }
@@ -80,14 +80,10 @@ if (argv.includes("local")) {
     const { title, titleOrig, canvas } = await makeStatus();
 
     const filename = join(tmp, `wikibot_${tmpFileCounter++}.png`);
-    const ws = createWriteStream(filename);
-    canvas.createPNGStream().pipe(ws);
-    await new Promise<string>((res, rej) => {
-      ws.on("finish", res);
-      ws.on("error", rej);
-    });
 
+    await writeFile(filename, canvas.toBuffer("image/png"));
     console.log(`"${title}"\n(Original: "${titleOrig}")\nfile://${filename}\n`);
+
     await setTimeout(1000);
     void createAndSave();
   };
