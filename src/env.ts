@@ -18,13 +18,33 @@ export const {
   TWITTER_ACCESS_SECRET,
   SENTRY_DSN,
 } = parseEnv(process.env, {
-  MASTODON_TOKEN: z.string().min(1),
-  MASTODON_TOKEN_ORIG: z.string().min(1),
-  TWITTER_API_KEY: z.string().min(1),
-  TWITTER_API_SECRET: z.string().min(1),
-  TWITTER_ACCESS_TOKEN: z.string().min(1),
-  TWITTER_ACCESS_SECRET: z.string().min(1),
-  SENTRY_DSN: z.string().min(1).optional(),
+  MASTODON_TOKEN: {
+    schema: z.string().min(1),
+    defaults: { development: "_" },
+  },
+  MASTODON_TOKEN_ORIG: {
+    schema: z.string().min(1),
+    defaults: { development: "_" },
+  },
+  TWITTER_API_KEY: {
+    schema: z.string().min(1),
+    defaults: { development: "_" },
+  },
+  TWITTER_API_SECRET: {
+    schema: z.string().min(1),
+    defaults: { development: "_" },
+  },
+  TWITTER_ACCESS_TOKEN: {
+    schema: z.string().min(1),
+    defaults: { development: "_" },
+  },
+  TWITTER_ACCESS_SECRET: {
+    schema: z.string().min(1),
+    defaults: { development: "_" },
+  },
+  SENTRY_DSN: {
+    schema: z.string().min(1).optional(),
+  },
 });
 
 /** account to which to toot images with a random caption from a different article. */
