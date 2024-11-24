@@ -66,7 +66,7 @@ async function main() {
   if (errors.length > 0) {
     throw new Error(
       `${errors.length} failure(s) when twooting:\n\n${errors
-        .map((r, i) => `${i}. ${String((r as PromiseRejectedResult).reason)}`)
+        .map((r, i) => `${i}. ${String(r.reason)}`)
         .join("\n\n")}\n`,
     );
   }
