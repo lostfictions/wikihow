@@ -81,7 +81,7 @@ async function main() {
             console.error(`error while tooting:\n${res.message}`);
             break;
           default:
-            throw new Error(`unexpected value:\n${JSON.stringify(res)}`);
+            console.error(`unexpected value:\n${JSON.stringify(res)}`);
         }
       }
     }
