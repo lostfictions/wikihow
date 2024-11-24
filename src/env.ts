@@ -11,10 +11,10 @@ if (isDev) {
 export const {
   MASTODON_TOKEN,
   MASTODON_TOKEN_ORIG,
-  TWITTER_API_KEY,
-  TWITTER_API_SECRET,
-  TWITTER_ACCESS_TOKEN,
-  TWITTER_ACCESS_SECRET,
+  BSKY_USERNAME,
+  BSKY_PASSWORD,
+  BSKY_USERNAME_ORIG,
+  BSKY_PASSWORD_ORIG,
   SENTRY_DSN,
 } = parseEnv(process.env, {
   MASTODON_TOKEN: {
@@ -25,19 +25,19 @@ export const {
     schema: z.string().min(1),
     defaults: { development: "_" },
   },
-  TWITTER_API_KEY: {
+  BSKY_USERNAME: {
     schema: z.string().min(1),
     defaults: { development: "_" },
   },
-  TWITTER_API_SECRET: {
+  BSKY_PASSWORD: {
     schema: z.string().min(1),
     defaults: { development: "_" },
   },
-  TWITTER_ACCESS_TOKEN: {
+  BSKY_USERNAME_ORIG: {
     schema: z.string().min(1),
     defaults: { development: "_" },
   },
-  TWITTER_ACCESS_SECRET: {
+  BSKY_PASSWORD_ORIG: {
     schema: z.string().min(1),
     defaults: { development: "_" },
   },
@@ -50,7 +50,7 @@ export const {
 export const MASTODON_SERVER = "https://mastodon.social";
 
 /** alternate account to which to toot images with their original caption. */
-export const MASTODON_SERVER_ORIG = "https://botsin.space";
+export const MASTODON_SERVER_ORIG = "https://mastodon.social";
 
 if (!SENTRY_DSN && !isDev) {
   console.warn(

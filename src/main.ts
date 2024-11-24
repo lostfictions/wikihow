@@ -12,10 +12,10 @@ import {
   MASTODON_SERVER_ORIG,
   MASTODON_TOKEN,
   MASTODON_TOKEN_ORIG,
-  TWITTER_API_KEY,
-  TWITTER_API_SECRET,
-  TWITTER_ACCESS_TOKEN,
-  TWITTER_ACCESS_SECRET,
+  BSKY_USERNAME,
+  BSKY_PASSWORD,
+  BSKY_USERNAME_ORIG,
+  BSKY_PASSWORD_ORIG,
 } from "./env";
 
 export const tmp = tmpdir();
@@ -26,7 +26,7 @@ async function main() {
 
   const buffer = canvas.toBuffer("image/png");
 
-  const results = await Promise.allSettled([
+  const resultSets = await Promise.allSettled([
     twoot(
       {
         status: title,
@@ -39,11 +39,9 @@ async function main() {
           token: MASTODON_TOKEN,
         },
         {
-          type: "twitter",
-          apiKey: TWITTER_API_KEY,
-          apiSecret: TWITTER_API_SECRET,
-          accessToken: TWITTER_ACCESS_TOKEN,
-          accessSecret: TWITTER_ACCESS_SECRET,
+          type: "bsky",
+          username: BSKY_USERNAME,
+          password: BSKY_PASSWORD,
         },
       ],
     ),
@@ -58,17 +56,35 @@ async function main() {
           server: MASTODON_SERVER_ORIG,
           token: MASTODON_TOKEN_ORIG,
         },
+        {
+          type: "bsky",
+          username: BSKY_USERNAME_ORIG,
+          password: BSKY_PASSWORD_ORIG,
+        },
       ],
     ),
   ]);
 
-  const errors = results.filter((r) => r.status === "rejected");
-  if (errors.length > 0) {
-    throw new Error(
-      `${errors.length} failure(s) when twooting:\n\n${errors
-        .map((r, i) => `${i}. ${String(r.reason)}`)
-        .join("\n\n")}\n`,
-    );
+  for (const results of resultSets) {
+    if (results.status === "rejected") {
+      console.error(`Failure when twooting: ${String(results.reason)}`);
+    } else {
+      for (const res of results.value) {
+        switch (res.type) {
+          case "mastodon":
+            console.log(`tooted at ${res.status.url}`);
+            break;
+          case "bsky":
+            console.log(`skeeted at ${res.status.uri}`);
+            break;
+          case "error":
+            console.error(`error while tooting:\n${res.message}`);
+            break;
+          default:
+            throw new Error(`unexpected value:\n${JSON.stringify(res)}`);
+        }
+      }
+    }
   }
 }
 
