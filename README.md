@@ -41,11 +41,10 @@ if you clone the repository you can run your own remixed version that posts to m
 - `MASTODON_TOKEN_ORIG`: a Mastodon user API token to post to the alternate "original captions" account
 - `BSKY_USERNAME`: the bot's username on Bluesky
 - `BSKY_PASSWORD`: the app password for the bot's account on Bluesky
-- `BSKY_USERNAME`: the username for the alternate "original captions" account on Bluesky
-- `BSKY_PASSWORD`: the app password for alternate "original captions" account on Bluesky
+- `BSKY_USERNAME_ORIG`: the username for the alternate "original captions" account on Bluesky
+- `BSKY_PASSWORD_ORIG`: the app password for alternate "original captions" account on Bluesky
 
-additionally, `MASTODON_SERVER` and `MASTODON_SERVER_ORIG` (hardcoded in [src/env.ts](src/env.ts)) control the mastodon instance to which API calls should be made (usually where the bot
-user lives.)
+additionally, `MASTODON_SERVER` and `MASTODON_SERVER_ORIG` (hardcoded in [src/env.ts](src/env.ts)) control the mastodon instance to which API calls should be made (usually where the bot user lives.)
 
 this bot uses [dotenv](https://github.com/motdotla/dotenv), so if you're testing things locally, you can stick any of the above environment variables in a file named `.env` in the project root. (it's gitignored, so there's no risk of accidentally committing private API tokens you put in there.)
 
