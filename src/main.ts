@@ -3,7 +3,7 @@ import { join } from "path";
 import { writeFile } from "fs/promises";
 import { setTimeout } from "timers/promises";
 import { twoot } from "twoot";
-import { captureException } from "@sentry/node";
+import { close as flushSentry } from "@sentry/node";
 
 import { makeStatus } from "./generate.ts";
 
@@ -99,13 +99,13 @@ if (argv.includes("local")) {
 
     await writeFile(filename, canvas.toBuffer("image/png"));
     console.log(`"${title}"\n(Original: "${titleOrig}")\nfile://${filename}\n`);
-
-    await setTimeout(1000);
-    void createAndSave();
   };
-  void createAndSave();
-} else {
-  void main()
-    .then(() => process.exit(0))
-    .catch((e: unknown) => captureException(e));
+
+  while (true) {
+    await createAndSave();
+    await setTimeout(1000);
+  }
 }
+
+await main();
+await flushSentry(2000);
