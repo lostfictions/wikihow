@@ -5,7 +5,7 @@ import { setTimeout } from "timers/promises";
 import { twoot } from "twoot";
 import { captureException } from "@sentry/node";
 
-import { makeStatus } from "./generate";
+import { makeStatus } from "./generate.ts";
 
 import {
   MASTODON_SERVER,
@@ -16,7 +16,7 @@ import {
   BSKY_PASSWORD,
   BSKY_USERNAME_ORIG,
   BSKY_PASSWORD_ORIG,
-} from "./env";
+} from "./env.ts";
 
 export const tmp = tmpdir();
 export let tmpFileCounter = 0;
@@ -107,5 +107,5 @@ if (argv.includes("local")) {
 } else {
   void main()
     .then(() => process.exit(0))
-    .catch((e) => captureException(e));
+    .catch((e: unknown) => captureException(e));
 }

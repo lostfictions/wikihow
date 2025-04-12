@@ -1,8 +1,8 @@
 import axios from "axios";
 import { load } from "cheerio";
 import { createCanvas, Image, Canvas } from "@napi-rs/canvas";
-import { randomInArray } from "./util";
-import { getBlacklist } from "./util/blacklist";
+import { randomInArray } from "./util/index.ts";
+import { getBlacklist } from "./util/blacklist.ts";
 
 const blacklist = getBlacklist();
 
@@ -91,7 +91,7 @@ async function getImage(url: string): Promise<Canvas> {
   // crop the image. 93% height is a rough estimate for getting rid of the
   // watermark.
   const canvas = createCanvas(image.width, image.height * 0.93);
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
   ctx.drawImage(image, 0, 0);
 
   return canvas;

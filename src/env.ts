@@ -5,7 +5,7 @@ import { parseEnv, z } from "znv";
 const isDev = process.env["NODE_ENV"] !== "production";
 
 if (isDev) {
-  require("dotenv").config();
+  (await import("dotenv")).config();
 }
 
 export const {

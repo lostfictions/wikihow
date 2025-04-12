@@ -1,3 +1,6 @@
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+
 export function getBlacklist() {
   const badwords: string[] = require("wordfilter/lib/badwords.json");
 
