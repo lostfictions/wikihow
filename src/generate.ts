@@ -29,7 +29,7 @@ async function getWikihow(): Promise<{ title: string; image: string }> {
 
     imgs = $("img.whcdn")
       .toArray()
-      .map((img) => img.attribs["data-src"])
+      .map((img) => img.attribs["src"])
       .filter((url) => url); // only images with this attribute!
   }
 
