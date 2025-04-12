@@ -18,7 +18,6 @@ jobs:
           node-version-file: ".node-version"
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
       - run: pnpm start
         env:
           NODE_ENV: "production"
