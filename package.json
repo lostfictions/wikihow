@@ -8,8 +8,8 @@
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
-    "start": "NODE_ENV=production node --experimental-strip-types src/main.ts",
-    "dev": "NODE_ENV=development node --experimental-strip-types src/main.ts -- local",
+    "start": "NODE_ENV=production node src/main.ts",
+    "dev": "NODE_ENV=development node src/main.ts -- local",
     "test": "run-p -cl test:*",
     "test:ts": "tsc --pretty --noEmit",
     "test:lint": "eslint --color 'src/**/*.{mjs,js,ts,jsx,tsx}' --max-warnings=0",
@@ -35,5 +35,5 @@
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },
-  "packageManager": "pnpm@10.8.0+sha512.0e82714d1b5b43c74610193cb20734897c1d00de89d0e18420aebc5977fa13d780a9cb05734624e81ebd81cc876cd464794850641c48b9544326b5622ca29971"
+  "packageManager": "pnpm@11.28.8+sha512.f6988a32046b9a3f78d7d7ee0747926bbe905ff9dff73bf19abb87bd7d1906a2ac90d93f73be32b5f9e14c2899569bcb0c9c5ec8a19e083f5d71bbab6dd9e0b8"
 }
