@@ -14,6 +14,14 @@ async function getWikihow(): Promise<{ title: string; image: string }> {
   async function requestAndParse() {
     const res = await axios.get("https://www.wikihow.com/Special:Randomizer", {
       responseType: "text",
+      headers: {
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "en-US,en;q=0.9",
+        "User-Agent":
+          "Mozilla/5.0 (X11; Linux x86_64; rv:158.0) Gecko/20100101 Firefox/158.0",
+      },
     });
 
     const $ = load(res.data);
